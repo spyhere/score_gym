@@ -8,6 +8,16 @@ let valuesGroupings = [["whole--triplet","whole--quinteplet", 4],["half--triplet
 let values = [valuesSimple].concat([valuesDots]);
 values = values.concat([valuesGroupings]); // THE WHOLE ARRAY OF NOTE VALUES
 
+export let measureReassign = {     // GIVING MEASURE IN NUMBER EQUIVALENT
+    "two_quarters": 2,
+    "three_quarters": 3,
+    "four_quarters": 4,
+    "five_quarters": 5,
+    "seven_quarters": 7,
+    "five_eights": 2.5,
+    "six_eights": 3
+}
+
 let names4Beaming = [/eighth|sixteenth|thirty-second/,/rest/]; // REGEX TO MAKE BEAMING
 let beamNum = 1; // THE QUANTITY OF QUARTERS TO BEAM
 
@@ -24,6 +34,7 @@ let linkOut = 0; // PROBABILITY GROUPINGS WITH LINKS OUTSIDE THE BAR
 let lvl = 0;        // LEVEL OF DIFFICULTY
 let groupRest = true; // GROUPING REST
 let showBeat = false; // NOT ALLOWING TO START THE GROUP BEFORE STRONG BEAT
+let fixingBeatProb = 70; // PROBABILITY TO MOVE RHYTM TO STRONG OR WEAK BEAT 
 
 // PROBABILITY OF SIMPLE VALUES****
 let noteValues = {  // PROBABILITY 
@@ -110,7 +121,7 @@ let arrayOfProbability = [simpleK,dotsK,groupK];
 export function updateData(state) {
     beamNum = state.beamNum;
     barsQuant = state.barsQuant;
-    measure = state.measure;
+    measure = measureReassign[state.measure];
     pauseValue = state.pauseValue;
     easyOBProb = state.easyOBProb;
     tripletValue = state.tripletValue;
@@ -275,6 +286,16 @@ export function updateData(state) {
             let barGroup = [];
             generatingGroupingValues(ind,indInner,indInnerInner,barGroup);
             bar.push(barGroup);
+        }
+
+        // FIXING THE BEAT
+        if (String(measure - fill).length > 3 && Math.random()*100 <= fixingBeatProb) {
+            values[0].forEach((z) => {
+                if ((z[2] + fill === Math.ceil(fill) || z[2] + fill === Math.ceil(fill) - beamNum / 2) && String(measure - fill).length > 3) {
+                    bar.push([z[0], z[2]]);
+                    fill += z[2];
+                }
+            })
         }
 
         // CLOSING THE BAR
@@ -550,7 +571,7 @@ function beaming(beamFill, beamGr, beamGrNames, bar, tup) {
             else if (names4Beaming[1].test(x[0])) {
                 return;
             }
-            if (index+1 <= bar.length-1 && (names4Beaming[0].test(bar[index+1][0]) && !names4Beaming[1].test(bar[index+1][0]))) {
+            if (index+1 <= bar.length-1 && (names4Beaming[0].test(bar[index+1][0]) && !names4Beaming[1].test(bar[index+1][0])) && !(/triplet|quinteplet/).test(bar[index][0])) {
 
 
 
@@ -595,7 +616,7 @@ function beaming(beamFill, beamGr, beamGrNames, bar, tup) {
 
                             // ENDING SECTION
                             if (!(/--st|--gr/).test(x[0]) && index>0 && (/--st|--gr/).test(bar[index-1][0]) && gr &&
-(index === bar.length-1 || beamGr === beamNum || beamFill === measure/2 || !names4Beaming[0].test(bar[index+1][0]) || names4Beaming[1].test(bar[index+1][0]))) {
+(index === bar.length-1 || beamGr === beamNum || beamFill === measure/2 || !names4Beaming[0].test(bar[index+1][0]) || names4Beaming[1].test(bar[index+1][0]) || (/triplet|quinteplet/).test(bar[index+1][0])) ) {
                                 if ((/eighth/).test(x[0])) {                            
                                     bar[index][0] = bar[index][0] + "--end";
                                 }

@@ -88,6 +88,9 @@ code {
   height: 70px;
   background-size: cover;
 }
+.value--animation {
+  animation: note 0.2s;
+}
 .four_quarters {
   top: 0;
   right: 3px;
@@ -104,26 +107,27 @@ code {
   background-size: cover;
 }
 .beat div {
+  /* font-family: 'Dancing Script', cursive; */
   position: relative;
   top: 75%;
   left: 7px;
 }
 .linked_in {
   position: relative;
-  top: -30px;
-  left: 45%;
-  width: 25px;
-  height: 54px;
+  top: -25px;
+  left: 50%;
+  width: 19px;
+  height: 44px;
   background-size: cover;
   transform: rotate(-90deg);
   background-image: url("./Images/bar/link_Ins.png");
 }
 .linked_out {
   position: relative;
-  top: -34px;
-  left: 67%;
-  width: 29px;
-  height: 60px;
+  top: -31px;
+  left: 109%;
+  width: 24px;
+  height: 55px;
   background-size: cover;
   transform: rotate(-90deg);
   background-image: url("./Images/bar/link_Ins.png");
@@ -135,7 +139,7 @@ code {
   background-repeat: no-repeat;
   background-position-y: 5px;
   position: relative;
-  margin: 0 7px 0 5px;
+  margin: 0 15px 0 5px;
 }
 .quinteplet {
   background-image: url("./Images/tuplets/tuplet.png");
@@ -146,18 +150,24 @@ code {
   position: relative;
   margin: 0 7px 0 5px;
 }
-.tuplet--num {
+.tuplet__num {
   position: absolute;
   top: -7px;
-  left: calc(50% - 6px);
-  font-size: 1.4em;
+  left: calc(50% - 10px);
+  font-size: 1.3em;
+  font-family: 'Dancing Script', cursive;
+}
+@keyframes note {
+  0% {transform: translateY(0px);}
+  70% {transform: translateY(5px);}
+  100% {transform: translateY(0px);}
 }
 
 
 /* /////////////// */
 .whole {
   top: 0px;
-  margin: 0 100px 0 90px;
+  margin: 0 185px 0 5px;
   background-image: url("./Images/simple/whole.png");
 }
 .whole--rest {
@@ -199,7 +209,7 @@ code {
   background-image: url("./Images/simple/eighth--st.png");
 }
 .eighth--end {
-  margin: 0 10px 0 -20px;
+  margin: 0 17px 0 -20px;
   background-image: url("./Images/simple/eighth--end.png");
 }
 .sixteenth {
@@ -279,7 +289,7 @@ code {
 
 .whole--dot {
   top: 0px;
-  margin: 0 100px 0 90px;
+  margin: 0 185px 0 5px;
   background-image: url("./Images/dotted/whole--dot.png");
 }
 .whole--dot--rest {
