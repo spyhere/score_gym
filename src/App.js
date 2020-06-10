@@ -4,9 +4,7 @@ import tick02 from "../src/Sounds/metro_other.mp3";
 import note01 from "../src/Sounds/clap01.mp3";
 import {updateData, generatingValues, measureReassign} from './notes';
 
-// let measureString = {
-//   4: "four_quarters"
-// }
+let testArr = [];
 
 let valInTup = [{
   half: 1.333333333333333,
@@ -100,8 +98,8 @@ class App extends React.Component {
   }
 
   beatReading() {
-    this.tick01.current.volume = 0.1;
-    this.tick02.current.volume = 0.1;
+    this.tick01.current.volume = 0.3;
+    this.tick02.current.volume = 0.2;
     let metronomeTemp = [];
     let metronomeFill = 0;
     let wholeBar = measureReassign[this.state.measure] / (this.state.bpm / 60) * 1000;
@@ -125,27 +123,31 @@ class App extends React.Component {
   }
 
   beatReadingFunc() {
-    this.note01.current.volume = 0.6;
     let arr = Array.from(document.querySelectorAll(".value"));
     let temp = [];
     arr.shift();
     let fill = 0;
 
     arr[0].classList.toggle("value--animation");
-    this.note01.current.load();
-    this.note01.current.play();
+    testArr[0].load();
+    testArr[0].play();
     for (let n in arr) {
       fill += 1000 * this.state.receivedVal[n] / (this.state.bpm / 60);
       if (Number(n)+1 <= arr.length-1) {
         temp.push(setTimeout(() => {
           arr[Number(n)+1].classList.toggle("value--animation");
-          this.note01.current.load();
-          this.note01.current.play();
+
+          if (!(/--rest/).test(arr[Number(n)+1].className)) {
+            let rand = Math.floor(Math.random()*40);
+            testArr[rand].load();
+            testArr[rand].play();
+          }
+          
         }, fill));
       }
     }
     this.setState({receivedValTimeouts: temp})
-    reading = setTimeout(this.stop, fill - this.state.receivedVal[this.state.receivedVal.length-1]*1000)
+    reading = setTimeout(this.stop, fill - 100)
   }
   
   stop() {
@@ -169,6 +171,16 @@ class App extends React.Component {
 
   componentDidMount() {
     updateData(this.state);
+
+    for (let i = 0; i < 20; i ++) {
+      let sound = this.note01.current;
+      sound.volume = 0.2;
+      testArr.push(sound);
+      let soundClone = sound.cloneNode(true);
+      soundClone.volume = 0.2;
+      testArr.push(soundClone);
+    }
+    
   } 
   render() {
     let bars = this.state.bars;
@@ -216,13 +228,13 @@ class App extends React.Component {
                     <div className={(/triplet/).test(y[0]) ? "triplet" : "quinteplet"}>
                     {x[ind+1].map((z, indI) => {
                       if (!indI) {
-                        return <div className={"value " + z[0]} style={{marginLeft: "0"}}></div>
+                        return <div className={"value " + z[0]} style={{marginLeft: "0"}} key={z[0]+String(index)}></div>
                       }
                       else if (indI === x[ind+1].length-1) {
-                        return <div className={"value " + z[0]} style={{marginRight: "0"}}></div>
+                        return <div className={"value " + z[0]} style={{marginRight: "0"}} key={z[0]+String(index)}></div>
                       }
                       else {
-                        return <div className={"value " + z[0]}></div>
+                        return <div className={"value " + z[0]} key={z[0]+String(index)}></div>
                       }
                       
                     })}
@@ -290,4 +302,5 @@ render () {
 }
 
 export default App;
+
 
