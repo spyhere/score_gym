@@ -4,14 +4,14 @@ import tick02 from "../src/Sounds/metro_other.mp3";
 import note01 from "../src/Sounds/clap01.mp3";
 import {updateData, generatingValues, measureReassign} from './notes';
 
-let testArr = [];
+let soundArr = [];
 
 let valInTup = [{
-  half: 1.333333333333333,
-  quarter: 0.6666666666666667,
+  half: 1.3333333333333333,
+  quarter: 0.6666666666666666,
   eighth: 0.3333333333333333,
-  sixteenth: 0.1666666666666667,
-  thirty: 0.0833333333333333
+  sixteenth: 0.16666666666666666,
+  thirty: 0.08333333333333333
 }, {
   quarter: 0.8,
   eighth: 0.4,
@@ -21,21 +21,37 @@ let valInTup = [{
 
 
 
-let reading;
+let reading, arr, beatReadN, rand, beatFill, metronome, inputOpen, wholeBar;
+let inputPerc = 15; // PERCANTAGE OF WINDOW TO HIT (% FROM ONE SIDE)
+let soundInd = 0;
 
-
+function beatInputListener() {
+  if (inputOpen && !(/--rest/).test(arr[beatReadN].className)) {
+    soundArr[soundInd].play()
+    arr[beatReadN].classList.toggle("value--animation");
+    soundInd ++
+    inputOpen = false;
+    if (soundInd === soundArr.length-1) {
+      soundInd = 0;
+    }
+  }
+  else if (!inputOpen || inputOpen && (/--rest/).test(arr[beatReadN].className)) {
+    console.log("mistake");
+    inputOpen = false;
+  }
+}
 
 class App extends React.Component {
   constructor(props) {
     super(props);
 
-    this.state = {bars: [], barsQuant: 16, measure: "four_quarters", pauseValue: 10, easyOBProb: 20, tripletValue: 90, groupRest: true, showBeat: false, bpm: 60,
-    easyGrouping: 95, linkIns: true, linkOut: 50, lvl: 2, simpleK: 50, dotsK: -0.1, groupK: 60, beat: true, beatNumb: true, beamNum: 1, receivedVal: [], receivedValTimeouts: [],  
+    this.state = {bars: [], barsQuant: 8, measure: "four_quarters", pauseValue: 10, easyOBProb: 20, tripletValue: 90, groupRest: true, showBeat: false, bpm: 70,
+    easyGrouping: 95, linkIns: true, linkOut: 50, lvl: 2, simpleK: 50, dotsK: -0.1, groupK: 60, beat: true, beatNumb: true, beamNum: 1, receivedVal: [],  
     noteValues: {whole: 5, half: 11, quarter: 15, eighth: 35, sixteenth: 36, thirtySecond: 0},
     dottedValues: {whole: -0.1, half: 5, quarter: 10, eighth: 30, sixteenth: 0, thirtySecond: 0},
     groupingValues: {whole: -0.1, half: 3, quarter: 10, eighth: 12}, 
     simValIns: {whole: -0.1, half: 5, quarter: 15, eighth: 20, sixteenth: 25, thirtySecond: 0},
-    metronome: []};
+    metronomeSwitch: false};
 
   this.tick01 = React.createRef();
   this.tick02 = React.createRef();
@@ -48,10 +64,13 @@ class App extends React.Component {
   this.beatReading = this.beatReading.bind(this);
   this.beatReadingFunc = this.beatReadingFunc.bind(this);
   this.stop = this.stop.bind(this);
+  this.beatInput = this.beatInput.bind(this);
+  this.beatInputFunc = this.beatInputFunc.bind(this);
   }
 
   nextGen() {
     console.clear();
+    wholeBar = 0;
     let arr = [];
     let tupletState;
     this.setState({bars: generatingValues()});
@@ -68,11 +87,11 @@ class App extends React.Component {
         if (!(/triplet|quinteplet/).test(y[0]) && Array.isArray(y)) {
           if (Array.isArray(y[0])) {
             for (let n in y){
-              arr.push(valInTup[tupletState][y[n][0].match(/[a-z]+/).join("")])
+              arr.push([y[n][0],valInTup[tupletState][y[n][0].match(/[a-z]+/).join("")]])
             }
           }
           else {
-            arr.push(y[1])
+            arr.push([y[0],y[1]])
           }
           
         }
@@ -97,73 +116,155 @@ class App extends React.Component {
     })
   }
 
-  beatReading() {
+  beatReading(input) {
+    this.setState({metronomeSwitch: true})
+    metronome = [];
+    inputOpen = false;
+    beatReadN = 0;
+    beatFill  = 0;
+    rand = 0;
+    let metronomeFill = 0;
+
+    arr = Array.from(document.querySelectorAll(".value"));
+    arr.shift();
+
     this.tick01.current.volume = 0.3;
     this.tick02.current.volume = 0.2;
-    let metronomeTemp = [];
-    let metronomeFill = 0;
-    let wholeBar = measureReassign[this.state.measure] / (this.state.bpm / 60) * 1000;
+    
+    wholeBar = measureReassign[this.state.measure] / (this.state.bpm / 60) * 1000;
 
     this.tick01.current.play();
-    metronomeTemp.push(setInterval(()=> this.tick01.current.play(), wholeBar));
 
     metronomeFill += wholeBar / measureReassign[this.state.measure];
-    while (metronomeFill < wholeBar) {
-      setTimeout(() => {
-        metronomeTemp.push(setInterval(()=> this.tick02.current.play(), wholeBar));
-        this.tick02.current.play();
-      }, metronomeFill); 
-      metronomeFill += wholeBar / measureReassign[this.state.measure];
+    
+    if (input) {
+      metronome.push(setInterval(() => {
+        this.tick01.current.play();
+      }, wholeBar))
+      while (metronomeFill < wholeBar) {
+        metronome.push(setTimeout(() => {
+          this.tick02.current.play();
+          metronome.push(setInterval(() => this.tick02.current.play(), wholeBar)) 
+        }, metronomeFill));
+        metronomeFill += wholeBar / measureReassign[this.state.measure];
+      }
+      metronome.push(setTimeout(this.stop, (this.state.barsQuant + 1) * wholeBar - (wholeBar * inputPerc / 100)) );
     }
-
-    this.setState({metronome: metronomeTemp});
-
-
-    setTimeout(this.beatReadingFunc, measureReassign[this.state.measure] / (this.state.bpm / 60) * 1000 - 50);
+    else {
+      while (metronomeFill < wholeBar) {
+            metronome.push(setTimeout(() => {
+              this.tick02.current.play();
+            }, metronomeFill)); 
+            metronomeFill += wholeBar / measureReassign[this.state.measure];
+          }
+    }
+    
+    if (input) {
+      metronome.push(setTimeout(this.beatInputFunc, wholeBar - ((1000 * this.state.receivedVal[beatReadN][1] / (this.state.bpm / 60)) * inputPerc / 100)));
+    }
+    else {
+      metronome.push(setTimeout(this.beatReadingFunc, wholeBar));
+    }
+    
   }
 
   beatReadingFunc() {
-    let arr = Array.from(document.querySelectorAll(".value"));
-    let temp = [];
-    arr.shift();
-    let fill = 0;
-
-    arr[0].classList.toggle("value--animation");
-    testArr[0].load();
-    testArr[0].play();
-    for (let n in arr) {
-      fill += 1000 * this.state.receivedVal[n] / (this.state.bpm / 60);
-      if (Number(n)+1 <= arr.length-1) {
-        temp.push(setTimeout(() => {
-          arr[Number(n)+1].classList.toggle("value--animation");
-
-          if (!(/--rest/).test(arr[Number(n)+1].className)) {
-            let rand = Math.floor(Math.random()*40);
-            testArr[rand].load();
-            testArr[rand].play();
-          }
-          
-        }, fill));
-      }
+  if (beatFill > measureReassign[this.state.measure] - 0.1) {
+    beatFill = 0;
+  }
+    if (beatFill === measureReassign[this.state.measure]) {
+      beatFill = 0;
     }
-    this.setState({receivedValTimeouts: temp})
-    reading = setTimeout(this.stop, fill - 100)
+
+    if (!beatReadN) {
+          arr[0].classList.toggle("value--animation");
+          if (!(/--rest/).test(arr[beatReadN].className)) {
+            soundArr[0].play();
+            rand ++ 
+          }
+          reading = setTimeout(this.beatReadingFunc, 1000 * this.state.receivedVal[beatReadN][1] / (this.state.bpm / 60));
+          
+        }
+    console.log(beatFill)
+    if (!beatFill || !beatReadN) {
+      let metronomeFill = 0;
+      let wholeBar = measureReassign[this.state.measure] / (this.state.bpm / 60) * 1000;
+
+      this.tick01.current.play();
+
+      metronomeFill += wholeBar / measureReassign[this.state.measure];
+      while (metronomeFill < wholeBar) {
+        metronome.push(setTimeout(() => {
+          this.tick02.current.play();
+        }, metronomeFill)); 
+        metronomeFill += wholeBar / measureReassign[this.state.measure];
+    }
+    if (!beatReadN) {
+      beatFill += this.state.receivedVal[beatReadN][1];
+      beatReadN ++;
+      return;
+    }
+
+    }
+
+
+    if (beatReadN < arr.length-1) {
+      reading = setTimeout(this.beatReadingFunc, 1000 * this.state.receivedVal[beatReadN][1] / (this.state.bpm / 60));
+    }
+    else {
+      setTimeout(this.stop, 1000 * this.state.receivedVal[beatReadN][1] / (this.state.bpm / 60));
+    }
+    
+    arr[beatReadN].classList.toggle("value--animation");
+
+    if (!(/--rest/).test(arr[beatReadN].className) && (!beatReadN || !(/^[\d]/).test(this.state.receivedVal[beatReadN-1][0]))) {
+      soundArr[rand].play();
+    }
+    
+
+    beatFill += this.state.receivedVal[beatReadN][1];
+    beatReadN ++;
+    rand ++ 
+    if (rand === soundArr.length-1) {
+      rand = 0;
+    }
+  }
+
+  beatInput() {
+    soundInd = 0;
+    this.setState({metronomeSwitch: true});
+    document.addEventListener("keydown", beatInputListener);
+    this.beatReading("input");
+  }
+
+  beatInputFunc() {
+    inputOpen = true;
+    metronome.push(setTimeout(() => {
+     if (inputOpen && !(/--rest/).test(arr[beatReadN].className)) {
+      console.log("mistake");
+     }
+    beatReadN ++;
+    inputOpen = false;
+    }, (1000 * this.state.receivedVal[beatReadN][1] / (this.state.bpm / 60)) * (inputPerc*6) / 100));
+    if (beatReadN < arr.length-1) {
+      reading = setTimeout(this.beatInputFunc, 1000 * this.state.receivedVal[beatReadN][1] / (this.state.bpm / 60));
+    }
+    
+    
   }
   
   stop() {
-    let arr = Array.from(document.querySelectorAll(".value"));
-    arr.shift();
-    let tempRead = this.state.receivedValTimeouts;
-    let tempMetronome = this.state.metronome;
-    for (let n in tempRead) {
-      clearTimeout(tempRead[n]);
+    document.removeEventListener("keydown", beatInputListener);
+    this.setState({metronomeSwitch: false})
+    for (let n in metronome) {
+      clearTimeout(metronome[n]);
+      clearInterval(metronome[n]);
+    }
+
+    for (let n in arr) {
       if (arr[n].classList.contains("value--animation")) {
         arr[n].classList.toggle("value--animation")
       }
-    }
-
-    for (let n in tempMetronome) {
-      clearTimeout(tempMetronome[n])
     }
 
     clearTimeout(reading);
@@ -175,10 +276,10 @@ class App extends React.Component {
     for (let i = 0; i < 20; i ++) {
       let sound = this.note01.current;
       sound.volume = 0.2;
-      testArr.push(sound);
+      soundArr.push(sound);
       let soundClone = sound.cloneNode(true);
       soundClone.volume = 0.2;
-      testArr.push(soundClone);
+      soundArr.push(soundClone);
     }
     
   } 
@@ -202,11 +303,12 @@ class App extends React.Component {
             <nav>
               <div>Beginner, Intermediate, Expert</div>
               <div></div>
-              <button onClick={this.nextGen}>NextGen</button>
+              <button onClick={this.nextGen} disabled={this.state.metronomeSwitch}>NextGen</button>
               <button onClick={this.beat}>Beat</button>
               <button onClick={this.beatNumb}>Num</button>
-              <button onClick={this.beatReading}>Reading</button>
-              <button onClick={this.stop}>Stop</button>
+              <button onClick={this.beatReading} disabled={this.state.bars.length < 1 || this.state.metronomeSwitch}>Reading</button>
+              <button onClick={this.stop} disabled={!this.state.metronomeSwitch}>Stop</button>
+              <button onClick={this.beatInput} disabled={this.state.bars.length < 1 || this.state.metronomeSwitch}>Practice</button>
             </nav>
               <div className="settings">SETTINGS: #measures, #number_of_bars, #bpm, #licked_notes</div>
               <div className="info">#Info, #tutorial</div>
@@ -224,7 +326,7 @@ class App extends React.Component {
                   beat += y[1];
                   return <div style={{position: "relative", height: "118px"}}>
                     <span className="tuplet__num">{(/triplet/).test(y[0]) ? 3 : 5}</span>
-                    {(( (ind === 0 && Array.isArray(y)) || (ind === 1 && beat === y[1]) || Number.isInteger(beat-y[1]) || (ind === x.length-1 && y[1] === this.state.beamNum) ) && count < this.state.measure ? (<div key={beat+y[0]} className="beat" style={this.state.beat ? ((/rest|whole/).test(y[0]) ? ({opacity: "100%", top:"100%", left:"5px"}) : ((/--end/).test(y[0]) ? ({opacity: "100%", left: "10px"}) : ({opacity: "100%"}))) : {opacity: "0%"}}><div style={this.state.beatNumb ? {opacity:"1"} : {opacity:"0"}}>{beat-y[1] + 1}</div><span style={{display: "none"}}>{count ++ }</span></div>) : null)}
+                    {(( (ind === 0 && Array.isArray(y)) || (ind === 1 && beat === y[1]) || Number.isInteger(beat-y[1]) || (ind === x.length-1 && y[1] === this.state.beamNum) ) && count < measureReassign[this.state.measure] ? (<div key={beat+y[0]} className="beat" style={this.state.beat ? ((/rest|whole/).test(y[0]) ? ({opacity: "100%", top:"100%", left:"5px"}) : ((/--end/).test(y[0]) ? ({opacity: "100%", left: "10px"}) : ({opacity: "100%"}))) : {opacity: "0%"}}><div style={this.state.beatNumb ? {opacity:"1"} : {opacity:"0"}}>{beat-y[1] + 1}</div><span style={{display: "none"}}>{count ++ }</span></div>) : null)}
                     <div className={(/triplet/).test(y[0]) ? "triplet" : "quinteplet"}>
                     {x[ind+1].map((z, indI) => {
                       if (!indI) {
@@ -250,7 +352,7 @@ class App extends React.Component {
                 let link = null;
                if (Array.isArray(y) && (y[0][0] === '0' || y[0][0] === '1')) { // DETERMINING WHERE IS THE LINK
                  let elem = y[0].split("");
-                 link = Number(elem.splice(0, 1));
+                 link = Number(elem.slice(0, 1));
                  y[0] = elem.join("");
                }
                let ch;
@@ -261,7 +363,7 @@ class App extends React.Component {
                           .join("");
                 beat += y[1];
                }
-                return <div className={Array.isArray(y) ? ("value " + y[0]) : ("value  " + this.state.measure)} id={index+ind}>
+                return <div className={Array.isArray(y) ? ("value " + y[0].match(/\D+[\d]*.+/).join("")) : ("value  " + this.state.measure)} id={index+ind}>
                   <Linked link={link} ch={ch} ind={ind} bars={this.state.bars} />
                   {(( (ind === 0 && Array.isArray(y)) ||( ind === 1 && beat === y[1]) || Number.isInteger(beat-y[1]) || (ind === x.length-1 && y[1] === this.state.beamNum) ) && count < measureReassign[this.state.measure] ? (<div key={beat+y[0]} className="beat" style={this.state.beat ? ((/rest|whole/).test(y[0]) ? ({opacity: "100%", top:"100%", left:"5px"}) : ((/--end/).test(y[0]) ? ({opacity: "100%", left: "10px"}) : ({opacity: "100%"}))) : {opacity: "0%"}}><div style={this.state.beatNumb ? {opacity:"1"} : {opacity:"0"}}>{beat-y[1] + 1}</div><span style={{display: "none"}}>{count ++ }</span></div>) : null)}
                   </div>
