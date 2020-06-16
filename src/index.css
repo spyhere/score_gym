@@ -12,13 +12,57 @@ nav {
 .info {
   float: left;
 }
+.settings--hook {
+  width: 100px;
+  height: 100px;
+  border: 1px solid;
+  position: absolute;
+  left: 91.3vw;
+}
 .settings {
   position: absolute;
-  left: 90vw;
-  float: right;
-  margin-right: 100px;
-  width: 2em;
-  font-size: 0.8em;
+  text-align: center;
+  z-index: 5;
+}
+.settings--inside {
+  position: relative;
+  top: 50vh;
+  width: 100px;
+  height: 100px;
+  border: 1px solid;
+}
+.main_page {
+  padding-top: 1em;
+  position: relative;
+  box-sizing: border-box;
+  z-index: 10;
+}
+.main_page--hook {
+  width: 100px;
+  height: 100px;
+  border: 1px solid;
+  position: absolute;
+  left: 0vw;
+  top: 25vh;
+}
+.main_page--anim {
+  box-shadow: 20px 25px 25px #000000;
+  animation: main 0.5s ease-in 0.1s 1 normal forwards;
+}
+.main_page--anim--back {
+  box-shadow: 20px 25px 25px #000000;
+  transform: translateX(-60vw) rotate3d(0.2, -1, 0, 90deg);
+  animation: main_back 0.5s ease-out 0.1s 1 normal forwards;
+}
+@keyframes main {
+  0% {transform: translateX(0vw) rotate3d(0.2, -1, 0, 0deg)}
+  60% {transform: translateX(-10vw) rotate3d(0.2, -1, 0, 20deg)}
+  100% {transform: translateX(-60vw) rotate3d(0.2, -1, 0, 90deg)}
+}
+@keyframes main_back {
+  0% {transform: translateX(-60vw) rotate3d(0.2, -1, 0, 90deg)}
+  60% {transform: translateX(-10vw) rotate3d(0.2, -1, 0, 20deg)}
+  100% {transform: translateX(0vw) rotate3d(0.2, -1, 0, 0deg)}
 }
 .score_body {
   margin-top: 20px;
@@ -112,6 +156,13 @@ code {
   top: 75%;
   left: 7px;
 }
+.button__holder {
+  position: sticky;
+  top: 0;
+}
+.button__lvl {
+  height: 3em;
+}
 .linked_in {
   position: relative;
   top: -25px;
@@ -159,7 +210,7 @@ code {
 }
 @keyframes note {
   0% {transform: translateY(0px);}
-  70% {transform: translateY(5px);}
+  30% {transform: translateY(5px);}
   100% {transform: translateY(0px);}
 }
 
@@ -330,7 +381,7 @@ code {
   background-image: url("./Images/dotted/eighth--dot--st.png")
 }
 .eighth--dot--end {
-  margin: 0 10px 0 -20px;
+  margin: 0 20px 0 -20px;
   background-image: url("./Images/dotted/eighth--dot--end.png");
 }
 .sixteenth--dot {

@@ -132,7 +132,6 @@ export function updateData(state) {
     simpleK = state.simpleK;
     dotsK = state.dotsK;
     groupK = state.groupK;
-    lvlK = state.lvlK;
     groupRest = state.groupRest;
     showBeat = state.showBeat;
     //////////////////
@@ -226,7 +225,7 @@ export function updateData(state) {
         })
 
         // TUPLET NOT TO FALL ON WEAK BEAT
-        if (!Number.isInteger(fill) && (ind === 2) && (dotsK > simpleK) ) {
+        if (!Number.isInteger(fill) && (ind === 2) && (dotsK > simpleK) && (remained >= values[1][probability[1][0].length-1][2]) ) {
             ind = 1
         }
         else if (!Number.isInteger(fill) && (ind === 2) && (dotsK < simpleK) ) {
