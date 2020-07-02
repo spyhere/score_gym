@@ -6,6 +6,9 @@ import tick02 from "../src/Sounds/metro_other.mp3";
 import note01 from "../src/Sounds/clap01.mp3";
 import {updateData, generatingValues, measureReassign} from './notes';
 import Settings from "./Settings";
+import Info from "./Info";
+import Header from "./Header";
+
 
 let soundArr = [];
 
@@ -24,8 +27,8 @@ let valInTup = [{
 
 
 
-let reading, arr, beatReadN, rand, beatFill, metronome, inputOpen, wholeBar, mistakes;
-let inputPerc = 30; // PERCANTAGE OF WINDOW TO HIT (% FROM ONE SIDE)
+let reading, arr, beatReadN, rand, beatFill, metronome, inputOpen, wholeBar, mistakes, infoHook;
+let inputPerc = 30; // PERCANTAGE OF WINDOW TO HIT (% FROM ONE SIDE). INPUT VALUE IN "PRACTICE" MODE
 let soundInd = 0;
 
 
@@ -39,7 +42,7 @@ class Presentational extends React.Component {
     dottedValues: {whole: -0.1, half: 5, quarter: 10, eighth: 30, sixteenth: 0, thirtySecond: 0},
     groupingValues: {whole: -0.1, half: 3, quarter: 10, eighth: 12}, 
     simValIns: {whole: -0.1, half: 5, quarter: 15, eighth: 20, sixteenth: 25, thirtySecond: 0},
-    metronomeSwitch: false, mistakes: null, mode: null, settings: false};
+    metronomeSwitch: false, mistakes: null, mode: null};
 
   this.tick01 = React.createRef();
   this.tick02 = React.createRef();
@@ -59,6 +62,7 @@ class Presentational extends React.Component {
   this.beatInputFunc = this.beatInputFunc.bind(this);
   this.beatInputListener = this.beatInputListener.bind(this);
   this.settings = this.settings.bind(this);
+  this.info = this.info.bind(this);
   }
 
   beginner() {
@@ -73,6 +77,7 @@ class Presentational extends React.Component {
       lvl: 0,
       beamNum: 1,
       groupRest: false,
+      settings: false,
       noteValues: {
         whole: 10,
         half: 15,
@@ -83,7 +88,8 @@ class Presentational extends React.Component {
       },
       mode: 1
     });
-    setTimeout(() => updateData(this.state), 50);
+    setTimeout(() => this.props.updateState(this.state), 50);
+    setTimeout(() => updateData(this.props.state), 50);
   }
 
   intermediate() {
@@ -98,6 +104,7 @@ class Presentational extends React.Component {
       lvl: 1,
       beamNum: 1,
       groupRest: true,
+      settings: false,
       noteValues: {
         whole: 5,
         half: 11,
@@ -118,7 +125,8 @@ class Presentational extends React.Component {
       dotsK: 95,
       mode: 2
     });
-    setTimeout(() => updateData(this.state), 50);
+    setTimeout(() => this.props.updateState(this.state), 50);
+    setTimeout(() => updateData(this.props.state), 50);
   }
 
   expert() {
@@ -133,6 +141,7 @@ class Presentational extends React.Component {
       lvl: 2,
       beamNum: 1,
       groupRest: true,
+      settings: false,
       noteValues: {
         whole: 5,
         half: 11,
@@ -162,12 +171,20 @@ class Presentational extends React.Component {
       groupK: 100,
       mode: 3
     });
-    setTimeout(() => updateData(this.state), 50);
+    setTimeout(() => this.props.updateState(this.state), 50);
+    setTimeout(() => updateData(this.props.state), 50);
   }
 
   settings() {
-    this.setState({settings: !this.state.settings});
-    document.querySelector(".main_page").classList.toggle("main_page--anim");
+    document.querySelector(".settings--hook").style.pointerEvents = "none";
+    this.props.newState({settings: !this.props.state.settings});
+    setTimeout(this.stop, 300);
+  }
+
+  info() {
+    document.querySelector(".info--hook").style.pointerEvents = "none";
+    this.props.newState({info: !this.props.state.info});
+    setTimeout(this.stop, 300);
   }
 
   nextGen() {
@@ -176,7 +193,7 @@ class Presentational extends React.Component {
     let arr = [];
     let tupletState;
     this.setState({bars: generatingValues()});
-    setTimeout(() => {                              // RECORDING THE DURATION VALUES IS ARRAY
+    setTimeout(() => {                              // RECORDING THE DURATION VALUES IN ARRAY
       this.state.bars.forEach((x) => {
       x.forEach((y) => {
         if ((/triplet/).test(y[0])) {
@@ -215,15 +232,17 @@ class Presentational extends React.Component {
   }
 
   beat() {
-    this.setState({
-      beat: !this.state.beat
-    });
+    // this.props.newState({
+    //   beat: !this.props.state.beat
+    // });
+    this.setState({beat: !this.state.beat})
   }
 
   beatNumb() {
-    this.setState({
-      beatNumb: !this.state.beatNumb
-    })
+    // this.props.newState({
+    //   beatNumb: !this.props.state.beatNumb
+    // })
+    this.setState({beatNumb: !this.state.beatNumb})
   }
 
   beatReading(input) {
@@ -243,11 +262,11 @@ class Presentational extends React.Component {
     this.tick01.current.volume = 0.3;
     this.tick02.current.volume = 0.2;
     
-    wholeBar = measureReassign[this.state.measure] / (this.state.bpm / 60) * 1000;
+    wholeBar = measureReassign[this.props.state.measure] / (this.props.state.bpm / 60) * 1000;
 
     this.tick01.current.play();
 
-    metronomeFill += wholeBar / measureReassign[this.state.measure];
+    metronomeFill += wholeBar / measureReassign[this.props.state.measure];
     
     if (input === "input") {
       metronome.push(setInterval(() => {
@@ -258,16 +277,16 @@ class Presentational extends React.Component {
           this.tick02.current.play();
           metronome.push(setInterval(() => this.tick02.current.play(), wholeBar)) 
         }, metronomeFill));
-        metronomeFill += wholeBar / measureReassign[this.state.measure];
+        metronomeFill += wholeBar / measureReassign[this.props.state.measure];
       }
-      metronome.push(setTimeout(this.stop, (this.state.barsQuant + 1) * wholeBar - 50) );
+      metronome.push(setTimeout(this.stop, (this.props.state.barsQuant + 1) * wholeBar - 50) );
     }
     else {
       while (metronomeFill < wholeBar) {
             metronome.push(setTimeout(() => {
               this.tick02.current.play();
             }, metronomeFill)); 
-            metronomeFill += wholeBar / measureReassign[this.state.measure];
+            metronomeFill += wholeBar / measureReassign[this.props.state.measure];
           }
     }
     
@@ -282,10 +301,10 @@ class Presentational extends React.Component {
   }
 
   beatReadingFunc() {
-  if (beatFill > measureReassign[this.state.measure] - 0.1) {
+  if (beatFill > measureReassign[this.props.state.measure] - 0.1) {
     beatFill = 0;
   }
-    if (beatFill === measureReassign[this.state.measure]) {
+    if (beatFill === measureReassign[this.props.state.measure]) {
       beatFill = 0;
     }
 
@@ -295,22 +314,22 @@ class Presentational extends React.Component {
             soundArr[0].play();
             rand ++ 
           }
-          reading = setTimeout(this.beatReadingFunc, 1000 * this.state.receivedVal[beatReadN][1] / (this.state.bpm / 60));
+          reading = setTimeout(this.beatReadingFunc, 1000 * this.state.receivedVal[beatReadN][1] / (this.props.state.bpm / 60));
           
         }
     console.log(beatFill)
     if (!beatFill || !beatReadN) {
       let metronomeFill = 0;
-      let wholeBar = measureReassign[this.state.measure] / (this.state.bpm / 60) * 1000;
+      let wholeBar = measureReassign[this.props.state.measure] / (this.props.state.bpm / 60) * 1000;
 
       this.tick01.current.play();
 
-      metronomeFill += wholeBar / measureReassign[this.state.measure];
+      metronomeFill += wholeBar / measureReassign[this.props.state.measure];
       while (metronomeFill < wholeBar) {
         metronome.push(setTimeout(() => {
           this.tick02.current.play();
         }, metronomeFill)); 
-        metronomeFill += wholeBar / measureReassign[this.state.measure];
+        metronomeFill += wholeBar / measureReassign[this.props.state.measure];
     }
     if (!beatReadN) {
       beatFill += this.state.receivedVal[beatReadN][1];
@@ -322,10 +341,10 @@ class Presentational extends React.Component {
 
 
     if (beatReadN < arr.length-1) {
-      reading = setTimeout(this.beatReadingFunc, 1000 * this.state.receivedVal[beatReadN][1] / (this.state.bpm / 60));
+      reading = setTimeout(this.beatReadingFunc, 1000 * this.state.receivedVal[beatReadN][1] / (this.props.state.bpm / 60));
     }
     else {
-      setTimeout(this.stop, 1000 * this.state.receivedVal[beatReadN][1] / (this.state.bpm / 60));
+      setTimeout(this.stop, 1000 * this.state.receivedVal[beatReadN][1] / (this.props.state.bpm / 60));
     }
     
     arr[beatReadN].classList.toggle("value--animation");
@@ -345,7 +364,7 @@ class Presentational extends React.Component {
 
   beatInput() {
     soundInd = 0;
-    this.setState({metronomeSwitch: true});
+    this.props.newState({metronomeSwitch: true});
     document.addEventListener("keydown", this.beatInputListener);
     this.beatReading("input");
   }
@@ -374,9 +393,9 @@ class Presentational extends React.Component {
      }
     beatReadN ++;
     inputOpen = false;
-    }, (1000 * this.state.receivedVal[beatReadN][1] / (this.state.bpm / 60)) * (inputPerc*3) / 100));
+    }, (1000 * this.state.receivedVal[beatReadN][1] / (this.props.state.bpm / 60)) * (inputPerc*3) / 100));
     if (beatReadN < arr.length-1) {
-      reading = setTimeout(this.beatInputFunc, 1000 * this.state.receivedVal[beatReadN][1] / (this.state.bpm / 60));
+      reading = setTimeout(this.beatInputFunc, 1000 * this.state.receivedVal[beatReadN][1] / (this.props.state.bpm / 60));
     }
     
     
@@ -400,8 +419,18 @@ class Presentational extends React.Component {
     clearTimeout(reading);
   }
 
+
+  shouldComponentUpdate(newState) {
+    if (JSON.stringify(this.state) !== JSON.stringify(this.props.state) || JSON.stringify(newState) !== JSON.stringify(this.state)) {
+      return true;
+    }
+    else {
+      return false;
+    }
+  }
+
   componentDidMount() {
-    updateData(this.state);
+    updateData(this.props.state);
 
     for (let i = 0; i < 20; i ++) {
       let sound = this.note01.current;
@@ -413,11 +442,16 @@ class Presentational extends React.Component {
     }
     
   } 
+
   render() {
     let bars = this.state.bars;
     return (
       <div>
-        {this.state.settings ? <Settings settings={this.state.settings} /> : null}
+        {this.props.state.settings ? <Settings/> : null}
+        {this.props.state.info ? <Info/> : null}
+        
+        <div style={{overflow: "hidden"}}>
+          <Header/>
         <div className="main_page">
             <div>
             <audio ref={this.tick01}>
@@ -430,13 +464,12 @@ class Presentational extends React.Component {
               <source src={note01} type="audio/mpeg"/>
             </audio>
             </div>
-            <header>
-              <h1>Welcome to <strong>Score Gym</strong></h1>
+
                 <nav>
                   <div className="button__holder">
-                    <button disabled={this.state.mode === 1} className="button__lvl" onClick={this.beginner}>Beginner</button>
-                    <button disabled={this.state.mode === 2} className="button__lvl" onClick={this.intermediate}>Intermediate</button>
-                    <button disabled={this.state.mode === 3} className="button__lvl" onClick={this.expert}>Expert</button> 
+                    <button disabled={this.props.state.mode === 1} className="button__lvl" onClick={this.beginner}>Beginner</button>
+                    <button disabled={this.props.state.mode === 2} className="button__lvl" onClick={this.intermediate}>Intermediate</button>
+                    <button disabled={this.props.state.mode === 3} className="button__lvl" onClick={this.expert}>Expert</button> 
                     </div>
                   <div></div>
                   <button onClick={this.nextGen} disabled={this.state.metronomeSwitch}>NextGen</button>
@@ -448,11 +481,9 @@ class Presentational extends React.Component {
                   <div style={{opacity: (this.state.mistakes !== null && mistakes >= 0) ? "1" : "0"}}>Mistakes: {this.state.mistakes}</div>
                 </nav>
                 
-    
-                  <div className="info">#Info, #tutorial</div>
-            </header>
 
-                <div style={{display: (this.state.settings) ? "none" : null}} className="settings--hook" onMouseOver={this.settings}>Settings</div>
+                <div className="settings--hook" onMouseOver={this.settings}>Settings</div>
+                <div className="info--hook" onMouseOver={this.info}>Info</div>
                 
 
             <div className="score_body">
@@ -468,7 +499,7 @@ class Presentational extends React.Component {
                       beat += y[1];
                       return <div style={{position: "relative", height: "118px"}} key={String(index) + "_" + ind}>
                         <span className="tuplet__num">{(/triplet/).test(y[0]) ? 3 : 5}</span>
-                        {(( (ind === 0 && Array.isArray(y)) || (ind === 1 && beat === y[1]) || Number.isInteger(beat-y[1]) || (ind === x.length-1 && y[1] === this.state.beamNum) ) && count < measureReassign[this.state.measure] ? (<div key={beat+y[0]} className="beat" style={this.state.beat ? ((/rest|whole/).test(y[0]) ? ({opacity: "100%", top:"100%", left:"5px"}) : ((/--end/).test(y[0]) ? ({opacity: "100%", left: "10px"}) : ({opacity: "100%"}))) : {opacity: "0%"}}><div style={this.state.beatNumb ? {opacity:"1"} : {opacity:"0"}}>{beat-y[1] + 1}</div><span style={{display: "none"}}>{count ++ }</span></div>) : null)}
+                        {(( (ind === 0 && Array.isArray(y)) || (ind === 1 && beat === y[1]) || Number.isInteger(beat-y[1]) || (ind === x.length-1 && y[1] === this.state.beamNum) ) && count < measureReassign[this.props.state.measure] ? (<div key={beat+y[0]} className="beat" style={this.state.beat ? ((/rest|whole/).test(y[0]) ? ({opacity: "100%", top:"100%", left:"5px"}) : ((/--end/).test(y[0]) ? ({opacity: "100%", left: "10px"}) : ({opacity: "100%"}))) : {opacity: "0%"}}><div style={this.state.beatNumb ? {opacity:"1"} : {opacity:"0"}}>{beat-y[1] + 1}</div><span style={{display: "none"}}>{count ++ }</span></div>) : null)}
                         <div className={(/triplet/).test(y[0]) ? "triplet" : "quinteplet"}>
                         {x[ind+1].map((z, indI) => {
                           if (!indI) {
@@ -505,9 +536,9 @@ class Presentational extends React.Component {
                               .join("");
                     beat += y[1];
                   }
-                    return <div className={Array.isArray(y) ? ("value " + y[0].match(/\D+[\d]*.+/).join("")) : ("value  " + this.state.measure)} key={index+ind + y[0]}>
-                      <Linked link={link} ch={ch} ind={ind} bars={this.state.bars} />
-                      {(( (ind === 0 && Array.isArray(y)) ||( ind === 1 && beat === y[1]) || Number.isInteger(beat-y[1]) || (ind === x.length-1 && y[1] === this.state.beamNum) ) && count < measureReassign[this.state.measure] ? (<div key={beat+y[0]} className="beat" style={this.state.beat ? ((/rest|whole/).test(y[0]) ? ({opacity: "100%", top:"100%", left:"5px"}) : ((/--end/).test(y[0]) ? ({opacity: "100%", left: "10px"}) : ({opacity: "100%"}))) : {opacity: "0%"}}><div style={this.state.beatNumb ? {opacity:"1"} : {opacity:"0"}}>{beat-y[1] + 1}</div><span style={{display: "none"}}>{count ++ }</span></div>) : null)}
+                    return <div className={Array.isArray(y) ? ("value " + y[0].match(/\D+[\d]*.+/).join("")) : ("value  " + this.props.state.measure)} key={index+ind + y[0]}>
+                      <Linked link={link} ch={ch} ind={ind} bars={this.props.state.bars} />
+                      {(( (ind === 0 && Array.isArray(y)) ||( ind === 1 && beat === y[1]) || Number.isInteger(beat-y[1]) || (ind === x.length-1 && y[1] === this.state.beamNum) ) && count < measureReassign[this.props.state.measure] ? (<div key={beat+y[0]} className="beat" style={this.state.beat ? ((/rest|whole/).test(y[0]) ? ({opacity: "100%", top:"100%", left:"5px"}) : ((/--end/).test(y[0]) ? ({opacity: "100%", left: "10px"}) : ({opacity: "100%"}))) : {opacity: "0%"}}><div style={this.state.beatNumb ? {opacity:"1"} : {opacity:"0"}}>{beat-y[1] + 1}</div><span style={{display: "none"}}>{count ++ }</span></div>) : null)}
                       </div>
                     }
                 })}
@@ -520,6 +551,7 @@ class Presentational extends React.Component {
               </div>
 
               </div>
+          </div>
           </div>
       </div>
     )

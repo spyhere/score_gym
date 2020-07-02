@@ -5,25 +5,34 @@ import React from 'react';
 class SettingsCon extends React.Component {
     constructor(props) {
         super(props);
-        
-        this.state = {mainPage: false}
 
     this.mainPage = this.mainPage.bind(this);
     }
     mainPage() {
-        this.setState({mainPage: !this.state.mainPage})
-        document.querySelector(".main_page").classList.toggle("main_page--anim");
-        document.querySelector(".main_page").classList.toggle("main_page--anim--back");
+        setTimeout(() => {
+           this.props.newState({settings: false}) 
+        }, 700);
+        
+        document.querySelector(".main_page").classList.add("main_page--settAnim--back");
+        setTimeout(() => document.querySelector(".settings--hook").style.pointerEvents = "auto", 800);
     }
 
+    componentDidMount() {
+        document.querySelector(".settings_page").style.height = document.querySelector(".main_page").clientHeight + "px";
+
+        let usedClass = document.querySelector(".main_page").classList;
+        usedClass.remove("main_page--settAnim", "main_page--settAnim--back")
+        usedClass.toggle("main_page--settAnim");
+        setTimeout(() => document.querySelector(".main_page--hook_sett").style.pointerEvents = "auto", 700)
+    }
     render() {
         return (
             <div>
-                <div className="settings">
+                <div className="settings_page">
                     {/* <div className="settings--inside"></div> */}
-                    <div style={{display: (this.state.mainPage) ? "none" : null}} className="main_page--hook" onMouseOver={this.mainPage}>Main_Page</div>
+                    <div className="main_page--hook_sett" onMouseOver={this.mainPage}>Main_Page</div>
 
-
+                    <h1>SETTINGS</h1>
 
                 </div>
             </div>
