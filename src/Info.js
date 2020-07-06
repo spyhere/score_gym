@@ -13,9 +13,10 @@ class InfoCon extends React.Component {
     mainPage() {
         document.querySelector(".main_page--hook_info").style.pointerEvents = "none";
         setTimeout(() => {
-            this.props.newState({info: false});
-            
+            this.props.updateState({info: false});
         }, 700)
+
+        document.querySelector("nav").classList.remove("nav--out");
 
         setTimeout(() => {
             document.querySelector(".info--hook").style.pointerEvents = "auto";
@@ -28,6 +29,8 @@ class InfoCon extends React.Component {
         
         document.querySelector(".info_page").classList.add("info_page--infoAnim");
 
+        document.querySelector("nav").classList.add("nav--out");
+
         setTimeout(() => {
             document.querySelector(".main_page--hook_info").style.pointerEvents = "auto";
           }, 700);
@@ -35,15 +38,18 @@ class InfoCon extends React.Component {
     render() {
         return (
             <div>
-                <div className="info_page">
-                    <div className="info">
-                        {/* <div className="info--inside"></div> */}
-                        <div className="main_page--hook_info" onMouseOver={this.mainPage}>Main_Page</div>
+                <div>
+                    <div className="info_page">
+                        <div className="info">
+                            {/* <div className="info--inside"></div> */}
+                            <div className="main_page--hook_info" onMouseOver={this.mainPage}>Main_Page</div>
 
-                    <h1>INFO, TUTORIAL</h1>
+                        <h1 className="display-4">Info</h1>
 
-                    </div>
-                </div>   
+                        </div>
+                    </div>   
+                </div>
+                
             </div>
         )
     }

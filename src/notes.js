@@ -102,6 +102,22 @@ let maxSimValsIns = null;
 
 // PROBABILITY OF VALUES INSIDE THE TUPLET
 
+// PROBABILITY OF QUINTEPLETS ON PARTICULAR NOTES
+
+let quintepletMap = {
+    whole: -0.1,
+    half: 5,
+    quarter: 15,
+    eighth: 0
+}
+
+let quintepletMapNames = Object.keys(quintepletMap);
+
+let quintepletMapProbability = [];
+let maxQuintepletMap = null;
+
+// PROBABILITY OF QUINTEPLETS ON PARTICULAR NOTES  
+
 
 
 let ind = 0;        // INDEX OF ARRAY: SIMPLE, DOTS, GROUPINGS
@@ -134,6 +150,7 @@ export function updateData(state) {
     groupK = state.groupK;
     groupRest = state.groupRest;
     showBeat = state.showBeat;
+    fixingBeatProb = state.fixingBeatProb;
     //////////////////
     noteValues = state.noteValues;
     noteProbability = [];
@@ -186,6 +203,19 @@ export function updateData(state) {
     }
     maxSimValsIns = simValInsProbability.reverse()[0][1];
     simValInsProbability.reverse();
+    //
+    quintepletMap = state.quintepletMap;
+    quintepletMapProbability = [];
+    maxQuintepletMap = null;
+
+    for (let n in quintepletMapNames) {
+        if (quintepletMap[quintepletMapNames[n]] !== 0) {
+            quintepletMapProbability.push([quintepletMapNames[n]]);
+             quintepletMapProbability[n].push(quintepletMap[quintepletMapNames[n]])
+        }
+    }
+    maxQuintepletMap = quintepletMapProbability.reverse()[0][1];
+    quintepletMapProbability.reverse();
     //////////////////
     probability = [[noteProbability,maxNoteValue],[dottedProbability,maxDottedValue],
     [groupingProbability,maxGroupingValue]];
@@ -313,7 +343,7 @@ export function updateData(state) {
     }
     bars[0].unshift(measure);
     // console.log(bars);
-    return bars;
+    return {bars: bars, maxSimple: noteProbability.length, maxDotted: dottedProbability.length, maxTuplet: groupingProbability.length, maxValsInTuplet: simValInsProbability.length, maxQuintepletProb: quintepletMapProbability.length};
 }
 
 
@@ -359,7 +389,7 @@ function generatingIndex(minimum,fill,ind,tuplet) {
 function insideValue() {
     if (values[ind][0][0] === "whole--triplet") {
         let coef = Math.round(Math.random()*100);
-        if (coef <= tripletValue ) {
+        if (coef <= tripletValue || ind === 2 && (quintepletMapProbability.length <= indInner || quintepletMapProbability[indInner][1] < 0)) {
             return 0;
         }
         return 1;

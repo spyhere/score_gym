@@ -3,6 +3,7 @@ import React from "react";
 
 
 class Header extends React.Component {
+
     render() {
         return (
             <div>
@@ -10,6 +11,8 @@ class Header extends React.Component {
                     <header>
                         <h1 className="display-4">Welcome to <strong>Score Gym</strong></h1>
                     </header>
+
+                    {/* <img href="#" alt="header img placeholder"></img> */}
                 </div>
                 
             </div>
